@@ -247,15 +247,17 @@ def generate_IO_examples(program, N, L, V):
     return IO
 
 
-def test_program(source):
+def test_program(source, N=5):
     import time
     t = time.time()
     source = source.replace(' | ', '\n')
     program = compile(source, V=512, L=10)
-    samples = generate_IO_examples(program, N=5, L=10, V=512)
+    samples = generate_IO_examples(program, N=N, L=10, V=512)
     print(("time:", time.time()-t))
     print(program)
-    print(samples)
+    print('samples:')
+    for s in samples:
+        print('    {}'.format(s))
     return program
 
 
