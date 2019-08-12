@@ -94,9 +94,12 @@ def get_language(V):
         Function('TAKE',    (int, [int], [int]), lambda n, xs: xs[:n],                                lambda A_B_L2: [(0,A_B_L2[2]), (A_B_L2[0], A_B_L2[1])]),
         Function('DROP',    (int, [int], [int]), lambda n, xs: xs[n:],                                lambda A_B_L3: [(0,A_B_L3[2]), (A_B_L3[0], A_B_L3[1])]),
         Function('ACCESS',  (int, [int], int),   lambda n, xs: xs[n] if n>=0 and len(xs)>n else Null, lambda A_B_L4: [(0,A_B_L4[2]), (A_B_L4[0], A_B_L4[1])]),
+        Function('COUNT', (int, [int], int),     lambda n, xs: len(list(filter(lambda i: i == n, xs))), lambda b: [(0, b[2]), (b[0], b[1])]),
+        Function('TAIL', ([int], [int]),         lambda xs: xs[1:] if len(xs) > 0 else Null,          lambda b: [(b[0], b[1])]),
         Function('HEAD',    ([int], int),        lambda xs: xs[0] if len(xs)>0 else Null,             lambda A_B_L5: [(A_B_L5[0], A_B_L5[1])]),
         Function('LAST',    ([int], int),        lambda xs: xs[-1] if len(xs)>0 else Null,            lambda A_B_L6: [(A_B_L6[0], A_B_L6[1])]),
         Function('MINIMUM', ([int], int),        lambda xs: min(xs) if len(xs)>0 else Null,           lambda A_B_L7: [(A_B_L7[0], A_B_L7[1])]),
+        Function('LEN', ([int], int),            lambda xs: len(xs),                                  lambda b: [(b[0], b[1])]),
         Function('MAXIMUM', ([int], int),        lambda xs: max(xs) if len(xs)>0 else Null,           lambda A_B_L8: [(A_B_L8[0], A_B_L8[1])]),
         Function('SUM',     ([int], int),        lambda xs: sum(xs),                                  lambda A_B_L9: [(int(A_B_L9[0]/A_B_L9[2])+1, int(A_B_L9[1]/A_B_L9[2]))]),
     ] + \
@@ -148,7 +151,9 @@ def compile(source_code, V, L, min_input_range_length=0, verbose=False):
     functions = []
     pointers = []
     for line in source_code.split('\n'):
+        # print("'%s'" % line)
         instruction = line[5:]
+        # instruction = line
         if instruction in ['int', '[int]']:
             input_types.append(eval(instruction))
             types.append(eval(instruction))
@@ -202,7 +207,6 @@ def compile(source_code, V, L, min_input_range_length=0, verbose=False):
         # print '--->'
         # for t in xrange(input_length, my_program_length):
         #     print('%s <- %s (%s)' % (chr(ord('a') + t), my_functions[t].src, ' '.join([chr(ord('a') + p) for p in my_pointers[t]])))
-
         assert len(args) == len(my_input_types)
         registers = [None]*my_program_length
         for t in range(len(args)):
@@ -243,9 +247,8 @@ def generate_IO_examples(program, N, L, V):
     return IO
 
 
-if __name__ == '__main__':
+def test_program(source):
     import time
-    source = sys.argv[1]
     t = time.time()
     source = source.replace(' | ', '\n')
     program = compile(source, V=512, L=10)
@@ -253,5 +256,61 @@ if __name__ == '__main__':
     print(("time:", time.time()-t))
     print(program)
     print(samples)
+    return program
 
 
+def test_sample(sample, program):
+    print('input:  ', sample[0])
+    print('expect: ', sample[1])
+    print('actual: ', program.fun(sample[0]))
+    assert program.fun(sample[0]) == sample[1]
+
+
+def test_example1():
+    source = 'a <- int | b <- [int] | c <- SORT b | d <- TAKE a c | e <- SUM d'
+    program = test_program(source)
+    sample = ((2, [3, 5, 4, 7, 5]), 7)
+    test_sample(sample, program)
+
+
+def test_example2():
+    source = 'a <- [int] | b <- HEAD a'
+    program = test_program(source)
+    sample = (([3, 5, 4, 7, 5],), 3)
+    test_sample(sample, program)
+
+    source = 'a <- [int] | b <- TAIL a'
+    program = test_program(source)
+    sample = (([3, 5, 4, 7, 5],), [5, 4, 7, 5])
+    test_sample(sample, program)
+
+
+def test_example3():
+    # src1 = 'count (head xs) (tail xs)'
+    source = 'a <- [int] | b <- TAIL a | c <- HEAD a | d <- COUNT c b'
+    program = test_program(source)
+    sample = (([3, 5, 4, 7, 5],), 0)
+    test_sample(sample, program)
+    sample = (([5, 4, 7, 5],), 1)
+    test_sample(sample, program)
+    sample = (([7, 4, 7, 8, 21, 1, 7, 2, 7, 5],), 3)
+    test_sample(sample, program)
+
+
+def test_example4():
+    # src2 = 'count (len xs) (tail xs)'
+    source = 'a <- [int] | b <- TAIL a | c <- LEN a | d <- COUNT c b'
+    program = test_program(source)
+    sample = (([3, 5, 4, 7, 5],), 2)
+    test_sample(sample, program)
+    sample = (([5, 4, 7, 5],), 1)
+    test_sample(sample, program)
+    sample = (([7, 4, 7, 8, 21, 1, 7, 2, 7, 5],), 0)
+    test_sample(sample, program)
+
+
+if __name__ == '__main__':
+    test_example1()
+    test_example2()
+    test_example3()
+    test_example4()
