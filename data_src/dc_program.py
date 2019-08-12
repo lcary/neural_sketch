@@ -259,21 +259,22 @@ def test_program(source):
     return program
 
 
-def test_sample(sample, program):
-    print('input:  ', sample[0])
-    print('expect: ', sample[1])
-    print('actual: ', program.fun(sample[0]))
+def test_sample(sample, program, debug=False):
+    if debug:
+        print('input:  ', sample[0])
+        print('expect: ', sample[1])
+        print('actual: ', program.fun(sample[0]))
     assert program.fun(sample[0]) == sample[1]
 
 
-def test_example1():
+def test_sum_top_index_sorted():
     source = 'a <- int | b <- [int] | c <- SORT b | d <- TAKE a c | e <- SUM d'
     program = test_program(source)
     sample = ((2, [3, 5, 4, 7, 5]), 7)
     test_sample(sample, program)
 
 
-def test_example2():
+def test_head_tail():
     source = 'a <- [int] | b <- HEAD a'
     program = test_program(source)
     sample = (([3, 5, 4, 7, 5],), 3)
@@ -285,7 +286,7 @@ def test_example2():
     test_sample(sample, program)
 
 
-def test_example3():
+def test_count_head_in_tail():
     # src1 = 'count (head xs) (tail xs)'
     source = 'a <- [int] | b <- TAIL a | c <- HEAD a | d <- COUNT c b'
     program = test_program(source)
@@ -297,7 +298,7 @@ def test_example3():
     test_sample(sample, program)
 
 
-def test_example4():
+def test_count_len_in_tail():
     # src2 = 'count (len xs) (tail xs)'
     source = 'a <- [int] | b <- TAIL a | c <- LEN a | d <- COUNT c b'
     program = test_program(source)
@@ -310,7 +311,7 @@ def test_example4():
 
 
 if __name__ == '__main__':
-    test_example1()
-    test_example2()
-    test_example3()
-    test_example4()
+    test_sum_top_index_sorted()
+    test_head_tail()
+    test_count_head_in_tail()
+    test_count_len_in_tail()
