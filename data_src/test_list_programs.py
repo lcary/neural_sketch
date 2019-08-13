@@ -48,7 +48,7 @@ def test_count_head_in_tail():
     test_sample(sample, program)
 
 
-def check_variance(samples, min_variance):
+def is_interesting(samples, min_variance):
     outputs = [p[-1] for p in samples]
     return np.var(outputs) >= min_variance
 
@@ -102,7 +102,7 @@ def generate_interesting_io_examples(
     while not interesting and elapsed < timeout:
         samples = generate_mixed_length_io_arrays(program, N=N, V=V, max_len=max_io_len)
         elapsed = time.time() - t
-        if check_variance(samples, min_variance):
+        if is_interesting(samples, min_variance):
             interesting = True
     print(("time:", elapsed))
     print(program)
